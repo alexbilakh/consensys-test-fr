@@ -19,12 +19,66 @@ function App() {
     setCurrentAccount(newAccounts[0]);
   };
 
+  const getRooms = () => {
+    return rooms;
+  };
+
   const initEvents = () => {
     window.ethereum.on("accountsChanged", () => {
       setCurrentAccountAddr();
     });
+
+    roomBooking.once("BookedRoom", (err, e) => {
+      if (err) {
+        console.log(err);
+        return;
+      }
+
+      let newRooms = [...getRooms()];
+      const newRoomNumber = Number(e.returnValues.room);
+      if (!newRooms[newRoomNumber])
+        newRooms[newRoomNumber] = {
+          company: 0,
+          userCount: 0,
+          roomUsers: [],
+        };
+      newRooms[newRoomNumber].company = Number(e.returnValues.company);
+      newRooms[newRoomNumber].userCount++;
+      newRooms[newRoomNumber].roomUsers = [
+        ...newRooms[newRoomNumber].roomUsers,
+        {
+          userAddress: e.returnValues.user.userAddress,
+          bookedAt: e.returnValues.user.bookedAt,
+        },
+      ];
+
+      setRooms(newRooms);
+    });
+
+    // Event initialization
+    roomBooking.once("CanceledReservation", (err, e) => {
+      if (err) {
+        console.log(err);
+        return;
+      }
+
+      let newRooms = [...getRooms()];
+      const newRoomNumber = Number(e.returnValues.room);
+      if (!newRooms[newRoomNumber])
+        newRooms[newRoomNumber] = {
+          company: 0,
+          userCount: 0,
+          roomUsers: [],
+        };
+      newRooms[newRoomNumber].userCount--;
+      newRooms[newRoomNumber].company = Number(e.returnValues.company);
+      newRooms[newRoomNumber].roomUsers = (newRooms[
+        newRoomNumber
+      ].roomUsers || []).filter((user) => user.userAddress != e.returnValues.booker);
+      setRooms(newRooms);
+    });
   };
-  
+
   const loadRooms = async () => {
     // get rooms available
     try {
@@ -90,9 +144,9 @@ function App() {
 
     const roomsResult = rooms.map((roomItem, index) => {
       const room = {
-        company: Number(roomItem.company),
-        userCount: Number(roomItem.userCount),
-        roomUsers: roomItem.roomUsers,
+        company: Number(roomItem?.company || 0),
+        userCount: Number(roomItem?.userCount || 0),
+        roomUsers: roomItem?.roomUsers || [],
       };
       if (room.userCount > 0) {
         companyInfo[room.company].roomCount++;
@@ -139,10 +193,13 @@ function App() {
         </div>
       );
     });
-
+    
     return (
       <>
-        <div className="grid md:grid-cols-2 mb-2 gap-2 text-white" key="companyData">
+        <div
+          className="grid md:grid-cols-2 mb-2 gap-2 text-white"
+          key="companyData"
+        >
           <div className="bg-rose-900 py-2 px-3 rounded">
             <span className="font-bold">COKE:</span> {companyInfo[0].roomCount}{" "}
             rooms, {companyInfo[0].userCount} users

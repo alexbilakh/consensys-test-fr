@@ -1,6 +1,6 @@
 import web3 from "./web3";
 
-const address = "0xA4a72F92Ba03989eA568c0b455a810B663E52243";
+const address = "0x632eb6095b062F1cB184A7e6B5cba374B12490AB";
 const abi = [
   {
     "anonymous": false,
@@ -12,10 +12,22 @@ const abi = [
         "type": "uint8"
       },
       {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "userAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "uint32",
+            "name": "bookedAt",
+            "type": "uint32"
+          }
+        ],
         "indexed": false,
-        "internalType": "address",
-        "name": "booker",
-        "type": "address"
+        "internalType": "struct RoomBooking.UserData",
+        "name": "user",
+        "type": "tuple"
       },
       {
         "indexed": false,
